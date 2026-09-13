@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Bank Demo — Deposit a check</title>
+<style>
+*{box-sizing:border-box}
+:root{--burg:#680033;--burgDark:#56002b;--text:#171217;--muted:#696269;--line:#ddd9dc;--soft:#f4f2f3;--green:#087b58}
+html,body{margin:0;min-height:100%;background:#e9e7e8}
+body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:var(--text)}
+button,input{font:inherit}button{cursor:pointer}
+.app{width:min(430px,100%);min-height:100vh;margin:auto;background:#fff;overflow:hidden;position:relative}
+.demo{position:fixed;z-index:99;right:7px;top:6px;background:#777;color:#fff;padding:3px 7px;border-radius:10px;font-size:8px;letter-spacing:.4px}
+.screen{display:none;min-height:100vh;background:#fff}.screen.active{display:block}
+.status{height:42px;padding:10px 17px 0;display:flex;justify-content:space-between;font-size:15px;font-weight:650}
+.status .right{display:flex;align-items:center;gap:6px}
+.header{height:65px;padding:0 24px;display:flex;align-items:center}
+.logo{width:31px;height:31px;border-radius:7px;background:var(--burg);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:800}
+.tools{margin-left:auto;display:flex;align-items:center;gap:22px}.bell{font-size:22px}.lock{font-size:18px}.sign{font-size:14px}
+.content{padding:0 24px 105px}
+h1{font-size:25px;line-height:1.18;font-weight:500;margin:0}
+.muted{color:var(--muted)}
+.greeting{font-size:24px;color:#5a123b;font-weight:500;margin:2px 0 25px}
+.eyebrow{font-size:14px;letter-spacing:.4px;margin-bottom:4px}
+.account{font-size:15px;margin-bottom:16px}.account b{letter-spacing:1px}
+.bigBalance{font-size:38px;color:#5a123b;margin-bottom:28px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding-bottom:25px;border-bottom:1px solid var(--line)}
+.quickItem{border:0;background:none;padding:0;color:#292329;font-size:12px}
+.quickIcon{width:43px;height:43px;margin:0 auto 8px;border-radius:50%;background:var(--burg);color:#fff;display:grid;place-items:center;font-size:20px}
+.activityLink{display:flex;justify-content:space-between;padding:21px 0;border-bottom:1px solid var(--line);font-size:15px}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);height:76px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);z-index:20}
+.nav button{border:0;background:#fff;font-size:12px;color:#292329}.navIcon{font-size:23px;height:30px}.nav .active{color:var(--burg);font-weight:650}
+
+.depositContent{padding:0 24px 25px}
+.depositContent h1{font-size:25px;margin-bottom:12px}
+.subtitle{font-size:16px;margin:0 0 7px}.help{font-size:14px;line-height:1.55;color:#454045;margin:0 0 18px}
+.photoRow{border:1px solid #cfc9ce;border-radius:11px;min-height:64px;margin:10px 0;display:flex;align-items:center;padding:0 18px;cursor:pointer}
+.photoIcon{width:38px;height:38px;border-radius:50%;background:var(--burg);color:#fff;display:grid;place-items:center;font-size:19px;margin-right:15px}
+.photoRow strong{font-size:16px;font-weight:500}.photoRow input{display:none}
+.limits{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:17px 0;margin-top:20px;font-size:14px}
+.cancel{text-align:center;color:var(--burg);padding:18px;font-size:16px}
+
+.cameraContent{padding:0 21px 28px}.cameraContent h1{margin-bottom:7px}.cameraContent .instruction{font-size:14px;margin-bottom:14px}
+.cameraFrame{height:222px;background:#76543a;border-radius:3px;position:relative;overflow:hidden;display:grid;place-items:center}
+.checkImage{width:86%;height:68%;background:#e9e7e1;box-shadow:0 2px 8px #2228;transform:rotate(-1deg);padding:13px;color:#252329;position:relative}
+.checkImage:before{content:"";position:absolute;inset:8px;border:1px solid #aaa}
+.checkBank{font-size:8px;font-weight:700}.checkDate{position:absolute;right:14px;top:18px;font-size:7px}
+.checkPay{font-size:8px;margin-top:13px}.checkAmt{position:absolute;right:15px;top:48px;font-size:9px}.checkWords{font-family:cursive;font-size:14px;margin-top:7px}.checkLine{height:1px;background:#888;margin-top:13px}
+.corner{position:absolute;width:24px;height:24px;border-color:#20a77b;border-style:solid}.tl{left:10px;top:10px;border-width:2px 0 0 2px}.tr{right:10px;top:10px;border-width:2px 2px 0 0}.bl{left:10px;bottom:10px;border-width:0 0 2px 2px}.br{right:10px;bottom:10px;border-width:0 2px 2px 0}
+.camActions{padding:14px 0 0}.action{height:45px;width:100%;border-radius:8px;font-size:15px}.retake{border:1px solid var(--burg);background:#fff;color:var(--burg)}.use{border:0;background:var(--burg);color:#fff;margin-top:10px}
+
+.reviewContent{padding:0 24px 100px}.reviewContent h1{margin-bottom:8px}.reviewText{font-size:14px;line-height:1.45;margin:0 0 14px}
+.thumbs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.thumb{border-radius:6px;overflow:hidden}.thumb .mini{height:84px;background:#76543a;display:grid;place-items:center}.thumb p{font-size:13px;margin:8px 0 0}
+.amountLabel{font-size:14px;margin:21px 0 6px}.amountInput{height:47px;width:100%;border:1px solid #d5d0d4;border-radius:8px;padding:0 12px;font-size:20px;outline:0}.availability{font-size:12px;color:#4e494e;margin:10px 0 14px}.continue{width:100%;height:43px;border:0;border-radius:7px;background:var(--burg);color:#fff;font-size:15px}
+
+.center{padding:78px 24px 105px;text-align:center}.circle{width:82px;height:82px;border:5px solid var(--burg);border-radius:50%;display:grid;place-items:center;margin:0 auto 24px;font-size:44px;color:var(--burg)}
+.center h1{font-size:22px}.center p{font-size:16px;line-height:1.45;color:#575057}
+.checks{width:230px;margin:30px auto;text-align:left}.checks div{margin:14px 0;font-size:14px}.checks b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--burg);color:#fff;margin-right:10px;font-size:12px}
+.approved .circle{background:var(--burg);color:#fff;border:0}.approved h1{font-size:22px}
+.card{background:#f3f1f2;border-radius:10px;text-align:left;padding:15px;margin:26px 0}.card div{padding:7px 0;font-size:15px}.card strong{font-weight:500}.fullBtn{width:100%;height:43px;border:0;border-radius:7px;background:var(--burg);color:#fff;font-size:15px}
+.accountTitle{font-size:13px;letter-spacing:.4px;margin-top:24px}.smallAccount{font-size:14px;margin-top:2px}.balanceRows{margin-top:45px}.balanceRows>div{display:flex;justify-content:space-between;padding:11px 0;font-size:14px}.balanceRows .new{border-top:1px solid #bbb}.balanceRows .new strong{font-size:28px;color:#5a123b}
+.activityPage{padding:0 24px 95px}.activityPage h1{margin-bottom:24px}.day{font-size:13px;margin-bottom:7px}
+.tx{display:flex;align-items:center;min-height:73px;border-bottom:1px solid var(--line)}.txIcon{width:34px;height:34px;border-radius:50%;background:var(--burg);color:#fff;display:grid;place-items:center;margin-right:12px;font-size:15px}.txMain{flex:1}.txName{font-size:14px}.txSub{font-size:12px;color:#6d676d;margin-top:4px}.txAmt{text-align:right;font-size:14px}.positive{color:var(--green)}
+.back{border:0;background:none;color:var(--burg);font-size:30px;padding:0 13px 0 0}
+@media(max-width:360px){.content,.depositContent,.reviewContent{padding-left:20px;padding-right:20px}.greeting{font-size:22px}.bigBalance{font-size:34px}}
+</style>
+</head>
+<body>
+<div class="demo">DEMO</div>
+<div class="app">
+
+<section id="home" class="screen active">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="content">
+<div class="greeting">Good morning, Migue</div>
+<div class="eyebrow">EVERYDAY CHECKING</div><div class="account">•••• 3965 <span style="float:right">›</span></div>
+<div class="muted" style="font-size:14px">Available balance</div><div class="bigBalance">$1,250.00</div>
+<div class="quick">
+<button class="quickItem"><div class="quickIcon">↔</div>Transfer</button>
+<button class="quickItem"><div class="quickIcon">▣</div>Pay bills</button>
+<button class="quickItem" onclick="go('deposit')"><div class="quickIcon">▤</div>Deposit<br>check</button>
+<button class="quickItem"><div class="quickIcon">•••</div>More</button>
+</div>
+<div class="activityLink">Recent activity <span>›</span></div>
+</div>
+<div class="nav"><button class="active"><div class="navIcon">⌂</div>Home</button><button><div class="navIcon">▭</div>Accounts</button><button onclick="go('deposit')"><div class="navIcon">▤</div>Deposit</button><button><div class="navIcon">☰</div>Menu</button></div>
+</section>
+
+<section id="deposit" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="depositContent">
+<h1>Deposit a check</h1><p class="subtitle">Take a photo of your check</p><p class="help">Make sure the check is well lit, all four corners are visible and the information is clear.</p>
+<label class="photoRow"><div class="photoIcon">⌾</div><strong>Front of check</strong><input id="front" type="file" accept="image/*" capture="environment"></label>
+<label class="photoRow"><div class="photoIcon">⌾</div><strong>Back of check</strong><input id="back" type="file" accept="image/*" capture="environment"></label>
+<div class="limits">Deposit limits &amp; availability <span>›</span></div>
+<div class="cancel" onclick="go('home')">Cancel</div>
+</div>
+</section>
+
+<section id="front" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><button class="back" onclick="go('deposit')">‹</button><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="cameraContent"><h1>Front of check</h1><div class="instruction">Align the check within the frame.</div><div class="cameraFrame"><div class="checkImage"><div class="checkBank">◉ First National Bank</div><div class="checkDate">4/26/2025</div><div class="checkPay">Pay to the order of</div><div class="checkWords">Five hundred and 00/100</div><div class="checkAmt">$500.00</div><div class="checkLine"></div></div><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></div>
+<div class="camActions"><button class="action retake" onclick="choose('frontFile')">↻ &nbsp; Retake</button><button class="action use" onclick="useFront()">Use this photo</button><input id="frontFile" type="file" accept="image/*" capture="environment" style="display:none"></div></div>
+</section>
+
+<section id="back" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><button class="back" onclick="go('deposit')">‹</button><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="cameraContent"><h1>Back of check</h1><div class="instruction">Align the check within the frame.</div><div class="cameraFrame"><div class="checkImage"><div style="font-size:10px;margin-top:10px">For deposit only</div><div class="checkWords" style="margin-top:22px">John Doe</div><div class="checkLine"></div></div><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></div>
+<div class="camActions"><button class="action retake" onclick="choose('backFile')">↻ &nbsp; Retake</button><button class="action use" onclick="useBack()">Use this photo</button><input id="backFile" type="file" accept="image/*" capture="environment" style="display:none"></div></div>
+</section>
+
+<section id="review" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><button class="back" onclick="go('deposit')">‹</button><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="reviewContent"><h1>Review check details</h1><p class="reviewText">We found the check. Please confirm the amount and details.</p>
+<div class="thumbs"><div><div class="thumb"><div class="mini" id="fmini"></div></div><p>Front of check</p></div><div><div class="thumb"><div class="mini" id="bmini"></div></div><p>Back of check</p></div></div>
+<div class="amountLabel">Amount</div><input class="amountInput" id="amount" value="$500.00" inputmode="decimal"><div class="availability">ⓘ &nbsp; Your deposit will be available within<br>&nbsp;&nbsp;&nbsp;&nbsp;1–2 business days.</div>
+<button class="continue" onclick="verify()">Continue</button></div>
+</section>
+
+<section id="verify" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="center"><div class="circle">✓</div><h1>Verifying your check...</h1><p>We're checking that your check is valid<br>and the information is correct.</p><div class="checks"><div><b>✓</b>Image quality</div><div><b>✓</b>Check details</div><div><b>✓</b>Security verification</div></div></div>
+</section>
+
+<section id="approved" class="screen approved">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="center"><div class="circle">✓</div><h1>Deposit approved!</h1><p>Your check has been accepted and will be processed soon.</p><div class="card"><div>Amount <strong id="approvedAmount" style="float:right">$500.00</strong></div><div>Available <strong style="float:right">Within 1–2 business days</strong></div></div><button class="fullBtn" onclick="updateBalance()">Done</button></div>
+</section>
+
+<section id="updated" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="reviewContent"><h1>Your balance has been updated</h1><div class="accountTitle">EVERYDAY CHECKING</div><div class="smallAccount">•••• 3965</div><div class="balanceRows"><div><span>Previous balance</span><strong>$1,250.00</strong></div><div><span>Deposit amount</span><strong id="dep">$500.00</strong></div><div class="new"><b>New balance</b><strong id="new">$1,750.00</strong></div></div><button class="fullBtn" onclick="activity()">View account</button></div>
+</section>
+
+<section id="activity" class="screen">
+<div class="status"><span>9:41</span><span class="right">▮▮▮ ◉ ▰</span></div>
+<div class="header"><div class="logo">F</div><div class="tools"><span class="bell">♧</span><span class="lock">▣</span><span class="sign">Sign off</span></div></div>
+<div class="activityPage"><h1>Recent activity</h1><div class="day">Today</div>
+<div class="tx"><div class="txIcon">▤</div><div class="txMain"><div class="txName">Check deposit <small>DEMO</small></div><div class="txSub">10:24 AM</div></div><div class="txAmt positive" id="txDeposit">+$500.00</div></div>
+<div class="tx"><div class="txIcon">↔</div><div class="txMain"><div class="txName">Transfer to savings</div><div class="txSub">8:12 AM</div></div><div class="txAmt">-$200.00</div></div>
+<div class="tx"><div class="txIcon">▭</div><div class="txMain"><div class="txName">Grocery Store</div><div class="txSub">Yesterday</div></div><div class="txAmt">-$46.32</div></div>
+<div class="tx"><div class="txIcon">▣</div><div class="txMain"><div class="txName">Direct deposit</div><div class="txSub">Apr 24, 2025</div></div><div class="txAmt positive">+$1,200.00</div></div></div>
+<div class="nav"><button class="active"><div class="navIcon">⌂</div>Home</button><button><div class="navIcon">▭</div>Accounts</button><button onclick="go('deposit')"><div class="navIcon">▤</div>Deposit</button><button><div class="navIcon">☰</div>Menu</button></div>
+</section>
+</div>
+
+<script>
+let frontData=null,backData=null,amount=500,balance=1250,updated=false;
+const $=id=>document.getElementById(id);
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+function choose(id){$(id).click()}
+function fileToData(file,cb){if(!file)return;const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsDataURL(file)}
+$('front').addEventListener('change',e=>fileToData(e.target.files[0],d=>{frontData=d;go('front')}))
+$('back').addEventListener('change',e=>fileToData(e.target.files[0],d=>{backData=d;go('back')}))
+$('frontFile').addEventListener('change',e=>fileToData(e.target.files[0],d=>{frontData=d}))
+$('backFile').addEventListener('change',e=>fileToData(e.target.files[0],d=>{backData=d}))
+function useFront(){if(!frontData){frontData='sample'}go('deposit')}
+function useBack(){if(!backData){backData='sample'}go('review');renderThumbs()}
+function renderThumbs(){['fmini','bmini'].forEach((id,i)=>{const el=$(id);el.innerHTML='';const c=document.createElement('div');c.className='checkImage';c.style.width='88%';c.style.height='72%';c.style.padding='7px';c.innerHTML=i===0?'<div class="checkBank">◉ First National Bank</div><div class="checkWords">Five hundred and 00/100</div><div class="checkAmt">$500.00</div>':'<div style="font-size:8px;margin-top:8px">For deposit only</div><div class="checkWords">John Doe</div>';el.appendChild(c)})}
+function money(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function verify(){let n=parseFloat($('amount').value.replace(/[$,]/g,''));if(!Number.isFinite(n)||n<=0){alert('Enter a valid amount.');return}amount=n;$('approvedAmount').textContent=money(amount);go('verify');setTimeout(()=>go('approved'),1400)}
+function updateBalance(){if(!updated){balance=1250+amount;updated=true}$('dep').textContent=money(amount);$('new').textContent=money(balance);$('txDeposit').textContent='+'+money(amount);go('updated')}
+function activity(){go('activity')}
+renderThumbs();
+</script>
+</body>
+</html>
