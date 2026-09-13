@@ -89,7 +89,7 @@
 <div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted">Modo demostración: no se procesan ni se envían pagos reales.</p><input id="demoName" placeholder="Nombre de prueba"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Número de tarjeta de prueba (cualquier número)"><input id="demoExpiry" placeholder="Vencimiento de prueba 12/30"><input id="demoCode" maxlength="4" inputmode="numeric" placeholder="Código de prueba 123"><button class="pay" onclick="verifyDemoPayment()">Continuar</button></div>
 <div id="loadingStep" class="payment-state hidden"><div class="spinner"></div><h2 id="loadingTitle">Comprobando información…</h2><p class="muted">Procesando únicamente datos de prueba en este navegador.</p></div>
 <div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
-<div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p class="muted">Tarjeta de prueba verificada: <b>•••• 4242</b></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido demo</button></div>
+<div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p id="confirmedCard" class="muted"></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido demo</button></div>
 <div id="successStep" class="payment-state hidden"><div class="check">✓</div><div class="success">Pedido confirmado</div><p class="muted" id="successText"></p><button class="pay" onclick="closePay();openOrders()">Ver mis pedidos</button></div>
 </div></div>
 <script>
@@ -106,20 +106,34 @@ function getCardType(number){
   return 'Tarjeta';
 }
 function verifyDemoPayment(){
-  const name=document.getElementById('cardName').value.trim();
-  const card=document.getElementById('cardNumber').value.replace(/\D/g,'');
+  const name=document.getElementById('demoName').value.trim();
+  const card=document.getElementById('demoCard').value.replace(/\D/g,'');
   if(!name){alert('Escribe el nombre de prueba.');return}
   if(card.length<8){alert('Introduce un número de tarjeta de prueba de al menos 8 dígitos.');return}
-  showPayStep('loading');
+  ['checkoutStep','pickupStep','confirmStep','successStep'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('loadingStep').classList.remove('hidden');
+  document.getElementById('loadingTitle').textContent='Comprobando información…';
   setTimeout(()=>{
+    document.getElementById('loadingStep').classList.add('hidden');
     const type=getCardType(card);
     document.getElementById('confirmedCard').textContent='Tipo de tarjeta confirmado: '+type+' •••• '+card.slice(-4);
-    showPayStep('confirmed');
-  },1800);
+    document.getElementById('pickupStep').classList.remove('hidden');
+  },1200);
 }
+
+function confirmPickup(){
+  const address=document.getElementById('pickupAddress').value.trim();
+  if(!address){alert('Escribe la dirección de retiro.');return}
+  pickupAddressValue=address;
+  pickupRefValue=document.getElementById('pickupRef').value.trim();
+  document.getElementById('pickupSummary').textContent='📍 Retiro: '+pickupAddressValue+(pickupRefValue?' — '+pickupRefValue:'');
+  document.getElementById('pickupStep').classList.add('hidden');
+  document.getElementById('confirmStep').classList.remove('hidden');
+}
+
 function confirmDemoPayment(){document.getElementById('confirmStep').classList.add('hidden');document.getElementById('loadingStep').classList.remove('hidden');document.getElementById('loadingTitle').textContent='Confirmando pedido…';setTimeout(()=>{document.getElementById('loadingStep').classList.add('hidden');createOrder();document.getElementById('successStep').classList.remove('hidden')},1400)}
-function createOrder(){const id='GP-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);const pickupAt=Date.now()+30*60000;document.getElementById('successText').textContent='Pedido #'+id+' confirmado. Se añadió a tu lista. El aviso de retiro comenzará ahora.';renderLiveOrder(id,pickupAt)}
+function createOrder(){const id='GP-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);const pickupAt=Date.now()+5*60*60*1000;document.getElementById('successText').textContent='Pedido #'+id+' confirmado. Se añadió a tu lista. El aviso de retiro comenzará ahora.';renderLiveOrder(id,pickupAt)}
 function renderLiveOrder(id,target){const box=document.querySelector('.orders .order-card');box.innerHTML='<div class="order-top"><b>Pedido #'+id+'</b><span class="status">Listo para retiro</span></div><div class="product-line"><span>📦</span><div><b>'+selectedProduct+'</b><small>📍 '+pickupAddressValue+'</small><small id="livePickup" class="countdown"></small></div></div><div class="progress"><i style="width:100%"></i></div><div class="steps"><span>Confirmado</span><span>Preparado</span><span>Listo</span><span>Retiro</span></div><div class="live-badge">Aviso de retiro actualizado cada segundo</div>';const list=document.querySelector('#ordersModal .box');const item=document.createElement('div');item.className='history-item';item.innerHTML='<b>#'+id+'</b><span class="status">Listo para retiro</span><p>'+selectedProduct+'</p><small>📍 '+pickupAddressValue+'</small><div id="modalPickup" class="countdown"></div><div class="progress"><i style="width:100%"></i></div><div class="live-badge">Temporizador en tiempo real</div>';list.insertBefore(item,list.children[2]);startCountdown(target)}
-function startCountdown(target){if(pickupTimer)clearInterval(pickupTimer);function tick(){let d=Math.max(0,target-Date.now()),sec=Math.ceil(d/1000),m=Math.floor(sec/60),s=sec%60;let text=d>0?'Retiro disponible en '+m+' min '+String(s).padStart(2,'0')+' s':'¡Tu pedido está listo para retiro!';['livePickup','modalPickup'].forEach(id=>{let el=document.getElementById(id);if(el)el.textContent=text});if(d<=0)clearInterval(pickupTimer)}tick();pickupTimer=setInterval(tick,1000)}
+function startCountdown(target){if(pickupTimer)clearInterval(pickupTimer);function tick(){let d=Math.max(0,target-Date.now()),sec=Math.ceil(d/1000),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;let text=d>0?'Retiro disponible en '+h+' h '+String(m).padStart(2,'0')+' min '+String(s).padStart(2,'0')+' s':'¡Tu pedido está listo para retiro!';['livePickup','modalPickup'].forEach(id=>{let el=document.getElementById(id);if(el)el.textContent=text});if(d<=0)clearInterval(pickupTimer)}tick();pickupTimer=setInterval(tick,1000)}
 function openOrders(){document.getElementById('ordersModal').style.display='flex'}function closeOrders(){document.getElementById('ordersModal').style.display='none'}function show(cat){document.querySelectorAll('.card').forEach(x=>x.style.display=cat==='all'||x.dataset.cat===cat?'block':'none')}function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.card').forEach(x=>x.style.display=x.dataset.name.includes(q)?'block':'none')}
 </script></body></html>
