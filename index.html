@@ -9,6 +9,22 @@
 .payment-state{text-align:center;padding:16px 4px}.spinner{width:42px;height:42px;border:4px solid #ddd;border-top-color:#111;border-radius:50%;animation:spin .8s linear infinite;margin:12px auto 18px}
 @keyframes spin{to{transform:rotate(360deg)}}.check{font-size:42px;margin:4px 0 8px}.muted{color:#666;font-size:13px}.success{color:#16723b;font-weight:800;font-size:18px}.hidden{display:none!important}
 .pay-state{padding:8px 0;text-align:center}.pickup-note{font-size:12px;color:#666;background:#f6f6f6;padding:10px;border-radius:10px}.countdown{font-weight:800;font-size:18px;margin-top:8px}.live-badge{font-size:12px;color:#16723b;margin-top:8px}.live-badge:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#24a148;margin-right:5px}
+
+<style>
+.card-preview{
+  width:min(340px,100%);height:205px;margin:14px auto 18px;padding:22px;
+  border-radius:18px;background:linear-gradient(135deg,#252525,#090909 55%,#3a3a3a);
+  color:#fff;box-shadow:0 14px 30px #0003;position:relative;overflow:hidden;text-align:left;
+}
+.card-preview:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;
+  right:-55px;top:-70px;background:#ffffff12}
+.card-chip{width:44px;height:32px;border-radius:7px;background:linear-gradient(135deg,#eee,#aaa);
+  margin-bottom:28px;position:relative}
+.card-chip:after{content:"";position:absolute;inset:7px;border:1px solid #777;border-radius:4px}
+.card-brand{position:absolute;right:20px;top:20px;font-weight:800;font-size:13px;letter-spacing:1px}
+.card-number{font-size:18px;letter-spacing:2px;margin-bottom:18px}
+.card-bottom{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+</style>
 </style></head>
 <body>
 <header><div class="head"><div class="logo">Gold&Phone</div><input class="search" id="q" placeholder="Buscar iPhone o cadenas..." oninput="filter()"><button class="cart">🛒 <span id="n">0</span></button></div></header>
@@ -88,7 +104,14 @@
 <div class="modal" id="pay" onclick="if(event.target===this)closePay()"><div class="box"><button class="close" onclick="closePay()">×</button>
 <div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted">Modo demostración: no se procesan ni se envían pagos reales.</p><input id="demoName" placeholder="Nombre de prueba"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Número de tarjeta de prueba (cualquier número)"><input id="demoExpiry" placeholder="Vencimiento de prueba 12/30"><input id="demoCode" maxlength="4" inputmode="numeric" placeholder="Código de prueba 123"><button class="pay" onclick="verifyDemoPayment()">Continuar</button></div>
 <div id="loadingStep" class="payment-state hidden"><div class="spinner"></div><h2 id="loadingTitle">Comprobando información…</h2><p class="muted">Procesando únicamente datos de prueba en este navegador.</p></div>
-<div id="cardConfirmedStep" class="payment-state hidden"><div class="check">✓</div><div class="success">Tarjeta confirmada</div><p id="confirmedCard2" class="muted"></p><p class="pickup-note">La tarjeta de prueba fue validada correctamente. Ahora puedes continuar con la dirección de retiro.</p><button class="pay" onclick="continueToPickup()">Continuar</button></div><div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
+<div id="cardConfirmedStep" class="payment-state hidden">
+      <div class="card-preview">
+        <div class="card-brand">GOLD&PHONE</div>
+        <div class="card-chip"></div>
+        <div id="visualCardNumber" class="card-number">•••• •••• •••• ••••</div>
+        <div class="card-bottom"><span id="visualCardName">CLIENTE</span><span>DEMO</span></div>
+      </div>
+      <div class="check">✓</div><div class="success">Tarjeta confirmada</div><p id="confirmedCard2" class="muted"></p><p class="pickup-note">La tarjeta de prueba fue validada correctamente. Ahora puedes continuar con la dirección de retiro.</p><button class="pay" onclick="continueToPickup()">Continuar</button></div><div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
 <div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p id="confirmedCard" class="muted"></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido demo</button></div>
 <div id="successStep" class="payment-state hidden"><div class="check">✓</div><div class="success">Pedido confirmado</div><p class="muted" id="successText"></p><button class="pay" onclick="closePay();openOrders()">Ver mis pedidos</button></div>
 </div></div>
@@ -117,6 +140,8 @@ function verifyDemoPayment(){
     document.getElementById('loadingStep').classList.add('hidden');
     const type=getCardType(card);
     document.getElementById('confirmedCard').textContent='Tipo de tarjeta confirmado: '+type+' •••• '+card.slice(-4);
+     document.getElementById('visualCardNumber').textContent='•••• •••• •••• '+card.slice(-4);
+     document.getElementById('visualCardName').textContent=name.toUpperCase().slice(0,22);
     document.getElementById('pickupStep').classList.remove('hidden');
   },1200);
 }
