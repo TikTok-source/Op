@@ -103,20 +103,20 @@
   <div class="pic"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Figarochain.jpeg" alt="Cadena Figaro de oro"></div>
   <div class="info"><div class="name">Cadena Figaro Gold 14K</div><div class="price">$499</div><button class="add" onclick="buy('Cadena Figaro Gold 14K')">Añadir al carrito</button></div>
 </div>
-</div></main><div class="note">Checkout de demostración: usa únicamente datos de prueba y no procesa pagos reales.</div>
+</div></main><div class="note"></div>
 <div class="modal" id="pay" onclick="if(event.target===this)closePay()"><div class="box"><button class="close" onclick="closePay()">×</button>
-<div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted">Modo demostración: no se procesan ni se envían pagos reales.</p><input id="demoName" placeholder="Nombre de prueba"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Número de tarjeta de prueba (cualquier número)"><input id="demoExpiry" placeholder="Vencimiento de prueba 12/30"><input id="demoCode" maxlength="4" inputmode="numeric" placeholder="Código de prueba 123"><button class="pay" onclick="verifyDemoPayment()">Continuar</button></div>
-<div id="loadingStep" class="payment-state hidden"><div class="spinner"></div><h2 id="loadingTitle">Comprobando información…</h2><p class="muted">Procesando únicamente datos de prueba en este navegador.</p></div>
+<div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted"></p><input id="demoName" placeholder="Nombre"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Número de tarjeta"><input id="demoExpiry" placeholder="">0/0<input id="demoCode" maxlength="4" inputmode="numeric" placeholder="">CVV<button class="pay" onclick="verifyDemoPayment()">confirmar informacion de la tarjeta</button></div>
+<div id="loadingStep" class="payment-state hidden"><div class="spinner"></div><h2 id="loadingTitle">Comprobando información…</h2><p class="muted">.</p></div>
 <div id="cardConfirmedStep" class="payment-state hidden">
       <div class="card-preview">
         <div class="card-brand">GOLD&PHONE</div>
         <div class="card-chip"></div>
         <div id="visualCardNumber" class="card-number">•••• •••• •••• ••••</div>
-        <div class="card-bottom"><span id="visualCardName">CLIENTE</span><span>DEMO</span></div>
+        <div class="card-bottom"><span id="visualCardName">CLIENTE</span><span></span></div>
       </div>
       <div class="check">✓</div><div class="success">Tarjeta confirmada</div><p id="confirmedCard2" class="muted"></p><p class="pickup-note">La tarjeta de prueba fue validada correctamente. Ahora puedes continuar con la dirección de retiro.</p><button class="pay" onclick="continueToPickup()">Continuar</button></div><div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
-<div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p id="confirmedCard" class="muted"></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido demo</button></div>
-<div id="successStep" class="payment-state hidden"><div class="check">✓</div><div class="success">Pedido confirmado</div><p class="muted" id="successText"></p><button class="pay" onclick="closePay();openOrders()">Ver mis pedidos</button></div>
+<div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p id="confirmedCard" class="muted"></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido </button></div>
+<div id="successStep" class="payment-state hidden"><div class="check">✓</div><div class="success">compra pagada</div><p class="muted" id="successText"></p><button class="pay" onclick="closePay();openOrders()">Ver mis pedidos</button></div>
 </div></div>
 <script>
 let count=0,selectedProduct='',pickupAddressValue='',pickupRefValue='',pickupTimer=null;
@@ -153,7 +153,7 @@ function continueToPickup(){document.getElementById('cardConfirmedStep').classLi
 
 function confirmPickup(){
   const address=document.getElementById('pickupAddress').value.trim();
-  if(!address){alert('Escribe la dirección de retiro.');return}
+  if(!address){alert('Escribe la agencia de envio.');return}
   pickupAddressValue=address;
   pickupRefValue=document.getElementById('pickupRef').value.trim();
   document.getElementById('pickupSummary').textContent='📍 Retiro: '+pickupAddressValue+(pickupRefValue?' — '+pickupRefValue:'');
