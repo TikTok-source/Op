@@ -86,7 +86,7 @@
 </div>
 </div></main><div class="note">Checkout de demostración: usa únicamente datos de prueba y no procesa pagos reales.</div>
 <div class="modal" id="pay" onclick="if(event.target===this)closePay()"><div class="box"><button class="close" onclick="closePay()">×</button>
-<div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted">Modo demostración: no se procesan ni se envían pagos reales.</p><input id="demoName" placeholder="Nombre de prueba"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Tarjeta de prueba: 4242 4242 4242 4242"><input id="demoExpiry" placeholder="Vencimiento de prueba 12/30"><input id="demoCode" maxlength="4" inputmode="numeric" placeholder="Código de prueba 123"><button class="pay" onclick="verifyDemoPayment()">Continuar</button></div>
+<div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted">Modo demostración: no se procesan ni se envían pagos reales.</p><input id="demoName" placeholder="Nombre de prueba"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Número de tarjeta de prueba (cualquier número)"><input id="demoExpiry" placeholder="Vencimiento de prueba 12/30"><input id="demoCode" maxlength="4" inputmode="numeric" placeholder="Código de prueba 123"><button class="pay" onclick="verifyDemoPayment()">Continuar</button></div>
 <div id="loadingStep" class="payment-state hidden"><div class="spinner"></div><h2 id="loadingTitle">Comprobando información…</h2><p class="muted">Procesando únicamente datos de prueba en este navegador.</p></div>
 <div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
 <div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p class="muted">Tarjeta de prueba verificada: <b>•••• 4242</b></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido demo</button></div>
@@ -97,8 +97,26 @@ let count=0,selectedProduct='',pickupAddressValue='',pickupRefValue='',pickupTim
 function buy(name){count++;document.getElementById('n').textContent=count;selectedProduct=name;document.getElementById('selected').textContent='Producto seleccionado: '+name;resetPayment();document.getElementById('pay').style.display='flex'}
 function resetPayment(){['checkoutStep','loadingStep','pickupStep','confirmStep','successStep'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('checkoutStep').classList.remove('hidden');document.getElementById('loadingTitle').textContent='Comprobando información…';['demoName','demoCard','demoExpiry','demoCode','pickupAddress','pickupRef'].forEach(id=>document.getElementById(id).value='')}
 function closePay(){document.getElementById('pay').style.display='none'}
-function verifyDemoPayment(){const card=document.getElementById('demoCard').value.replace(/\s/g,'');const name=document.getElementById('demoName').value.trim();if(!name||card!=='4242424242424242'){alert('Para esta demostración usa el nombre de prueba y la tarjeta 4242 4242 4242 4242.');return}document.getElementById('checkoutStep').classList.add('hidden');document.getElementById('loadingStep').classList.remove('hidden');setTimeout(()=>{document.getElementById('loadingStep').classList.add('hidden');document.getElementById('pickupStep').classList.remove('hidden')},1800)}
-function confirmPickup(){pickupAddressValue=document.getElementById('pickupAddress').value.trim();pickupRefValue=document.getElementById('pickupRef').value.trim();if(!pickupAddressValue){alert('Escribe la dirección de retiro.');return}document.getElementById('pickupStep').classList.add('hidden');document.getElementById('pickupSummary').textContent='📍 Retiro en: '+pickupAddressValue+(pickupRefValue?' · '+pickupRefValue:'');document.getElementById('confirmStep').classList.remove('hidden')}
+function getCardType(number){
+  const n=number.replace(/\D/g,'');
+  if(/^4/.test(n)) return 'Visa';
+  if(/^(5[1-5]|2[2-7])/.test(n)) return 'Mastercard';
+  if(/^3[47]/.test(n)) return 'American Express';
+  if(/^6(?:011|5)/.test(n)) return 'Discover';
+  return 'Tarjeta';
+}
+function verifyDemoPayment(){
+  const name=document.getElementById('cardName').value.trim();
+  const card=document.getElementById('cardNumber').value.replace(/\D/g,'');
+  if(!name){alert('Escribe el nombre de prueba.');return}
+  if(card.length<8){alert('Introduce un número de tarjeta de prueba de al menos 8 dígitos.');return}
+  showPayStep('loading');
+  setTimeout(()=>{
+    const type=getCardType(card);
+    document.getElementById('confirmedCard').textContent='Tipo de tarjeta confirmado: '+type+' •••• '+card.slice(-4);
+    showPayStep('confirmed');
+  },1800);
+}
 function confirmDemoPayment(){document.getElementById('confirmStep').classList.add('hidden');document.getElementById('loadingStep').classList.remove('hidden');document.getElementById('loadingTitle').textContent='Confirmando pedido…';setTimeout(()=>{document.getElementById('loadingStep').classList.add('hidden');createOrder();document.getElementById('successStep').classList.remove('hidden')},1400)}
 function createOrder(){const id='GP-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);const pickupAt=Date.now()+30*60000;document.getElementById('successText').textContent='Pedido #'+id+' confirmado. Se añadió a tu lista. El aviso de retiro comenzará ahora.';renderLiveOrder(id,pickupAt)}
 function renderLiveOrder(id,target){const box=document.querySelector('.orders .order-card');box.innerHTML='<div class="order-top"><b>Pedido #'+id+'</b><span class="status">Listo para retiro</span></div><div class="product-line"><span>📦</span><div><b>'+selectedProduct+'</b><small>📍 '+pickupAddressValue+'</small><small id="livePickup" class="countdown"></small></div></div><div class="progress"><i style="width:100%"></i></div><div class="steps"><span>Confirmado</span><span>Preparado</span><span>Listo</span><span>Retiro</span></div><div class="live-badge">Aviso de retiro actualizado cada segundo</div>';const list=document.querySelector('#ordersModal .box');const item=document.createElement('div');item.className='history-item';item.innerHTML='<b>#'+id+'</b><span class="status">Listo para retiro</span><p>'+selectedProduct+'</p><small>📍 '+pickupAddressValue+'</small><div id="modalPickup" class="countdown"></div><div class="progress"><i style="width:100%"></i></div><div class="live-badge">Temporizador en tiempo real</div>';list.insertBefore(item,list.children[2]);startCountdown(target)}
