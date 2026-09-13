@@ -88,14 +88,14 @@
 <div class="modal" id="pay" onclick="if(event.target===this)closePay()"><div class="box"><button class="close" onclick="closePay()">×</button>
 <div id="checkoutStep"><h2>Finalizar compra</h2><p id="selected"></p><p class="muted">Modo demostración: no se procesan ni se envían pagos reales.</p><input id="demoName" placeholder="Nombre de prueba"><input id="demoCard" inputmode="numeric" maxlength="19" placeholder="Número de tarjeta de prueba (cualquier número)"><input id="demoExpiry" placeholder="Vencimiento de prueba 12/30"><input id="demoCode" maxlength="4" inputmode="numeric" placeholder="Código de prueba 123"><button class="pay" onclick="verifyDemoPayment()">Continuar</button></div>
 <div id="loadingStep" class="payment-state hidden"><div class="spinner"></div><h2 id="loadingTitle">Comprobando información…</h2><p class="muted">Procesando únicamente datos de prueba en este navegador.</p></div>
-<div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
+<div id="cardConfirmedStep" class="payment-state hidden"><div class="check">✓</div><div class="success">Tarjeta confirmada</div><p id="confirmedCard2" class="muted"></p><p class="pickup-note">La tarjeta de prueba fue validada correctamente. Ahora puedes continuar con la dirección de retiro.</p><button class="pay" onclick="continueToPickup()">Continuar</button></div><div id="pickupStep" class="payment-state hidden"><h2>📍 Dirección de retiro</h2><p class="muted">Indica dónde recogerás tu pedido.</p><input id="pickupAddress" placeholder="Dirección de retiro"><input id="pickupRef" placeholder="Referencia (opcional)"><button class="pay" onclick="confirmPickup()">Continuar</button></div>
 <div id="confirmStep" class="payment-state hidden"><div class="check">✓</div><h2>Información confirmada</h2><p id="confirmedCard" class="muted"></p><p id="pickupSummary" class="pickup-note"></p><button class="pay" onclick="confirmDemoPayment()">Confirmar pedido demo</button></div>
 <div id="successStep" class="payment-state hidden"><div class="check">✓</div><div class="success">Pedido confirmado</div><p class="muted" id="successText"></p><button class="pay" onclick="closePay();openOrders()">Ver mis pedidos</button></div>
 </div></div>
 <script>
 let count=0,selectedProduct='',pickupAddressValue='',pickupRefValue='',pickupTimer=null;
 function buy(name){count++;document.getElementById('n').textContent=count;selectedProduct=name;document.getElementById('selected').textContent='Producto seleccionado: '+name;resetPayment();document.getElementById('pay').style.display='flex'}
-function resetPayment(){['checkoutStep','loadingStep','pickupStep','confirmStep','successStep'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('checkoutStep').classList.remove('hidden');document.getElementById('loadingTitle').textContent='Comprobando información…';['demoName','demoCard','demoExpiry','demoCode','pickupAddress','pickupRef'].forEach(id=>document.getElementById(id).value='')}
+function resetPayment(){['checkoutStep','loadingStep','cardConfirmedStep','pickupStep','confirmStep','successStep'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('checkoutStep').classList.remove('hidden');document.getElementById('loadingTitle').textContent='Comprobando información…';['demoName','demoCard','demoExpiry','demoCode','pickupAddress','pickupRef'].forEach(id=>document.getElementById(id).value='')}
 function closePay(){document.getElementById('pay').style.display='none'}
 function getCardType(number){
   const n=number.replace(/\D/g,'');
@@ -120,6 +120,8 @@ function verifyDemoPayment(){
     document.getElementById('pickupStep').classList.remove('hidden');
   },1200);
 }
+
+function continueToPickup(){document.getElementById('cardConfirmedStep').classList.add('hidden');document.getElementById('pickupStep').classList.remove('hidden')}
 
 function confirmPickup(){
   const address=document.getElementById('pickupAddress').value.trim();
